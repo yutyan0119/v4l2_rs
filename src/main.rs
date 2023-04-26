@@ -22,18 +22,23 @@ fn main() -> io::Result<()> {
     let format_set: v4l::Format = v4l::Format::new(1920, 1080, v4l::FourCC::new(b"MJPG"));
     let format: v4l::Format = dev.set_format(&format_set)?;
     println!("Format: {:?}", format);
-    let qctrls: Vec<v4l::control::Description>  = dev.query_controls()?;
+    let qctrls: Vec<v4l::control::Description> = dev.query_controls()?;
     println!("Controls: {:?}", qctrls);
     for qctrl in qctrls {
         println!("{}", qctrl);
     }
     // let ctrl = v4l::Control::new(9963776, 0, 0, 0, 0);
     // dev.set_control(ctrl);
-    let mut stream: MmapStream = MmapStream::with_buffers(& dev, Type::VideoCapture, buffer_count)?; 
+    let mut stream: MmapStream = MmapStream::with_buffers(&dev, Type::VideoCapture, buffer_count)?;
     let (buf, meta) = stream.next()?;
     //write buffer to file
     let mut file = std::fs::File::create("test.jpg")?;
     file.write_all(&buf)?;
-    println!("Buffer size: {}, seq: {}, timestamp: {}", buf.len(), meta.sequence, meta.timestamp);
+    println!(
+        "Buffer size: {}, seq: {}, timestamp: {}",
+        buf.len(),
+        meta.sequence,
+        meta.timestamp
+    );
     Ok(())
 }
