@@ -1,0 +1,10 @@
+[package]
+name = "v4l2_rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Yuto Nakamura <78634880+yutyan0119@users.noreply.github.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+v4l = "0.13.1"
