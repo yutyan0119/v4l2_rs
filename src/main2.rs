@@ -291,5 +291,16 @@ fn main() -> io::Result<()> {
             ),
         ));
     }
+
+    unsafe {
+        libc::close(fd);
+    }
+
+    for buffer in buffers {
+        unsafe {
+            libc::munmap(buffer.start, buffer.length as usize);
+        }
+    }
+    
     Ok(())
 }
