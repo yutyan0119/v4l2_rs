@@ -14,14 +14,20 @@ struct Buffer {
 }
 
 fn main() -> io::Result<()> {
-    let path: CString = CString::new("/dev/video0").unwrap();
+    let path: CString = CString::new("/dev/video0")?;
     //let path: CString= CString::new("/dev/video0").unwrap().asptr();はダメ
     //即座に変換すると、すぐに破棄されてしまう
     //pointers do not have a lifetime; when calling `as_ptr` the `CString` will be deallocated at the end of the statement because nothing is referencing it as far as the type system is concerned
     let c_path: *const i8 = path.as_ptr();
     let fd: RawFd = unsafe { open(c_path, O_RDWR | O_NONBLOCK) };
     if fd == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
     let mut v4l2_cap: v4l2_sys::v4l2_capability = unsafe { std::mem::zeroed() };
     let ret: std::os::raw::c_int = unsafe {
@@ -32,7 +38,13 @@ fn main() -> io::Result<()> {
         )
     };
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
     if v4l2_cap.capabilities & V4L2_CAP_VIDEO_CAPTURE == 0 {
         println!("Error: V4L2_CAP_VIDEO_CAPTURE is not supported");
@@ -44,10 +56,10 @@ fn main() -> io::Result<()> {
     format.type_ = v4l2_sys::v4l2_buf_type_V4L2_BUF_TYPE_VIDEO_CAPTURE;
     format.fmt.pix.width = 1280;
     format.fmt.pix.height = 720;
-    let m = b'M' as u32;
-    let j = b'J' as u32;
-    let p = b'P' as u32;
-    let g = b'G' as u32;
+    let m: u32 = b'M' as u32;
+    let j: u32 = b'J' as u32;
+    let p: u32 = b'P' as u32;
+    let g: u32 = b'G' as u32;
     format.fmt.pix.pixelformat = (m << 24) | (j << 16) | (p << 8) | g;
     format.fmt.pix.field = v4l2_sys::v4l2_field_V4L2_FIELD_ANY;
     let ret: std::os::raw::c_int = unsafe {
@@ -58,7 +70,13 @@ fn main() -> io::Result<()> {
         )
     };
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
     format = unsafe { std::mem::zeroed() };
     format.type_ = v4l2_sys::v4l2_buf_type_V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -70,7 +88,13 @@ fn main() -> io::Result<()> {
         )
     };
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
 
     unsafe {
@@ -91,7 +115,13 @@ fn main() -> io::Result<()> {
         )
     };
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
     println!("v4l2_reqbuf.count: {}", v4l2_reqbuf.count);
 
@@ -109,11 +139,13 @@ fn main() -> io::Result<()> {
             )
         };
         if ret == -1 {
-            println!("Error: {}", io::Error::last_os_error());
-        }
-        unsafe {
-            println!("v4l2_buf.length: {}", v4l2_buf.length);
-            println!("v4l2_buf.m.offset: {}", v4l2_buf.m.offset);
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!(
+                    "Failed to open video device: {}",
+                    io::Error::last_os_error()
+                ),
+            ));
         }
         let ptr: *mut std::os::raw::c_void = unsafe {
             libc::mmap(
@@ -126,7 +158,13 @@ fn main() -> io::Result<()> {
             )
         };
         if ptr == libc::MAP_FAILED {
-            println!("Error: {}", io::Error::last_os_error());
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!(
+                    "Failed to open video device: {}",
+                    io::Error::last_os_error()
+                ),
+            ));
         }
         let buffer: Buffer = Buffer {
             start: ptr,
@@ -148,7 +186,13 @@ fn main() -> io::Result<()> {
             )
         };
         if ret == -1 {
-            println!("Error: {}", io::Error::last_os_error());
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!(
+                    "Failed to open video device: {}",
+                    io::Error::last_os_error()
+                ),
+            ));
         }
     }
 
@@ -163,13 +207,19 @@ fn main() -> io::Result<()> {
     };
 
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
 
     let mut v4l2_buf: v4l2_sys::v4l2_buffer = unsafe { std::mem::zeroed() };
     v4l2_buf.type_ = v4l2_sys::v4l2_buf_type_V4L2_BUF_TYPE_VIDEO_CAPTURE;
     v4l2_buf.memory = v4l2_sys::v4l2_memory_V4L2_MEMORY_MMAP;
-    let ret = unsafe {
+    let ret: i32 = unsafe {
         libc::poll(
             &mut libc::pollfd {
                 fd: fd,
@@ -181,7 +231,13 @@ fn main() -> io::Result<()> {
         )
     };
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
     let ret: std::os::raw::c_int = unsafe {
         libc::ioctl(
@@ -192,7 +248,13 @@ fn main() -> io::Result<()> {
     };
 
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
 
     let data_slice: &[u8] = unsafe {
@@ -221,7 +283,13 @@ fn main() -> io::Result<()> {
     };
 
     if ret == -1 {
-        println!("Error: {}", io::Error::last_os_error());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "Failed to open video device: {}",
+                io::Error::last_os_error()
+            ),
+        ));
     }
     Ok(())
 }
