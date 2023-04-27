@@ -301,7 +301,9 @@ dependencies = [
 name = "v4l2_rs"
 version = "0.1.0"
 dependencies = [
+ "libc",
  "v4l",
+ "v4l2-sys-mit",
 ]
 
 [[package]]
