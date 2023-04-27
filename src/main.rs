@@ -27,8 +27,6 @@ fn main() -> io::Result<()> {
     for qctrl in qctrls {
         println!("{}", qctrl);
     }
-    // let ctrl = v4l::Control::new(9963776, 0, 0, 0, 0);
-    // dev.set_control(ctrl);
     let mut stream: MmapStream = MmapStream::with_buffers(&dev, Type::VideoCapture, buffer_count)?;
     let (buf, meta) = stream.next()?;
     //write buffer to file
